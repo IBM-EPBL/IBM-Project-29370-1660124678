@@ -1,0 +1,162 @@
+frmLogin.cs 
+using System; 
+using System.Collections.Generic; 
+using System.ComponentModel; 
+using System.Data; 
+using System.Drawing; 
+using System.Linq;
+using System.Text; 
+using System.Threading.Tasks; 
+using System.Windows.Forms; 
+using System.Data.SqlClient; 
+namespace InventoryManagementSystem 
+{ 
+public partial class frmLogin : Form
+{ 
+public frmLogin() 
+{ 
+InitializeComponent(); 
+} 
+private void txtUserName_KeyDown(object sender, KeyEventArgs e)
+{ 
+clsGlobalFunction.Tab_Function(e); 
+clsGlobalFunction.Escape_Function(e, btnCancel); 
+} 
+private void txtPassword_KeyDown(object sender, KeyEventArgs e)
+{ 
+
+clsGlobalFunction.Tab_Function(e); 
+clsGlobalFunction.Escape_Function(e, btnCancel); 
+} 
+private void txtFiscalYear_KeyDown(object sender, KeyEventArgs e)
+{ 
+clsGlobalFunction.Tab_Function(e); 
+clsGlobalFunction.Escape_Function(e, btnCancel);
+} 
+private void btnCancel_Click(object sender, EventArgs e)
+{ 
+Application.Exit(); 
+} 
+private void btnCancel_KeyDown(object sender, KeyEventArgs e)
+{ 
+if (e.KeyCode == Keys.Escape) { Application.Exit(); } 
+} 
+private void btnOK_Click(object sender, EventArgs e)
+{ 
+clsGlobalFunction.temp_text = "Select * from user_login where 
+user_name='" + txtUserName.Text + "' and password='" + 
+clsGlobalFunction.Encrypt(txtPassword.Text) + "'"; 
+SqlDataAdapter da = new SqlDataAdapter(clsGlobalFunction.temp_text, 
+clsGlobalFunction.cn); 
+DataSet ds = new DataSet(); 
+da.Fill(ds, "table0");
+if (ds.Tables[0].Rows.Count > 0) 
+{ 
+this.Hide(); 
+} 
+else
+{ 
+MessageBox.Show("User Name or Password is not Correct");
+txtUserName.Focus(); 
+} 
+} 
+private void txtUserName_Validated(object sender, EventArgs e)
+{ 
+} 
+private void txtPassword_Validated(object sender, EventArgs e)
+{ 
+} 
+private void txtFiscalYear_Validated(object sender, EventArgs e)
+{ 
+} 
+private void frmLogin_Load(object sender, EventArgs e)
+{ 
+try
+{ 
+clsGlobalFunction.temp_text = "select * from fiscal_year"; 
+
+SqlDataAdapter da = new
+SqlDataAdapter(clsGlobalFunction.temp_text, clsGlobalFunction.cn); 
+DataSet ds = new DataSet(); 
+da.Fill(ds, "table0");
+txtFiscalYear.Items.Clear(); 
+for (int i = 0; i < ds.Tables[0].Rows.Count; i++) 
+{ 
+txtFiscalYear.Items.Add(ds.Tables[0].Rows[i]["fyear"].ToString());
+txtFiscalYear.Text = 
+ds.Tables[0].Rows[i]["fyear"].ToString(); 
+} 
+} 
+catch { } 
+} 
+private void txtUserName_Validating(object sender, CancelEventArgs e)
+{ 
+if (txtUserName.Text == "") { MessageBox.Show("Please Enter User 
+Name", "Inventory Management System", MessageBoxButtons.OK, 
+MessageBoxIcon.Information); txtUserName.Focus(); return; } 
+} 
+private void txtFiscalYear_SelectedIndexChanged(object sender,
+EventArgs e)
+{ 
+} 
+private void label3_Click(object sender, EventArgs e)
+{ 
+} 
+} 
+} 
+ 
+SaveFileDialog saveBACKUP = new SaveFileDialog(); 
+try
+{ 
+DialogResult Dr; 
+saveBACKUP.Filter = "File format (*.bak)|*.bak"; 
+saveBACKUP.FileName = "INVENTORY ( BACKUP ) " + 
+DateTime.Now.Year.ToString() + "-" + DateTime.Now.Month.ToString() + "-" + 
+DateTime.Now.Day.ToString(); 
+Dr = saveBACKUP.ShowDialog(); 
+if (Dr == DialogResult.OK) 
+{ 
+string s = null; 
+s = saveBACKUP.FileName; 
+SqlCommand cmd = new SqlCommand("Backup database " + 
+clsGlobalFunction.DatabaseName + " to disk='" + s + "' WITH STATS", 
+clsGlobalFunction.cnMaster); 
+cmd.ExecuteNonQuery(); 
+clsGlobalFunction.MessageBoxDisplay("Sucussfully Created 
+Backup !!!");
+} 
+} 
+catch (Exception ex) 
+{ 
+clsGlobalFunction.MessageBoxDisplay(ex.Message); 
+}
+6.5 Restore Data code 
+OpenFileDialog RestoreBACKUP = new OpenFileDialog(); 
+try
+{ 
+DialogResult Dr; 
+RestoreBACKUP.Filter = "File format (*.bak)|*.bak"; 
+Dr = RestoreBACKUP.ShowDialog(); 
+if (Dr == DialogResult.OK) 
+{ 
+string s = null; 
+s = RestoreBACKUP.FileName; 
+SqlCommand cmd = new SqlCommand(); 
+cmd.Connection = clsGlobalFunction.cnMaster; 
+try
+{ 
+cmd.CommandText = "Alter Database " + 
+clsGlobalFunction.DatabaseName + " SET SINGLE_USER With ROLLBACK IMMEDIATE"; 
+cmd.ExecuteNonQuery(); 
+cmd.CommandText = "RESTORE DATABASE " + 
+clsGlobalFunction.DatabaseName + " FROM DISK = '" + s + "' WITH REPLACE"; 
+cmd.ExecuteNonQuery(); 
+cmd.CommandText = "Alter Database " + 
+clsGlobalFunction.DatabaseName + " SET MULTI_USER"; 
+cmd.ExecuteNonQuery(); 
+clsGlobalFunction.MessageBoxDisplay("Sucussfully 
+Created Restored.Application is Restarted !!!");
+Application.Restart(); 
+} 
+catch (Exception ex) { 
+clsGlobalFunction.MessageBoxDisplay(ex.Message); }
